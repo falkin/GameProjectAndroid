@@ -68,6 +68,7 @@ public class MainActivity extends SimpleBaseGameActivity implements
 
 	private Sound shootingSound;
 	public Music backgroundMusic;
+	
 
 	private BitmapTextureAtlas mAutoParallaxBackgroundTexture;
 	private TextureRegion mParallaxLayer;
