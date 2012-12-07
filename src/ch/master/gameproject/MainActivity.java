@@ -1,46 +1,32 @@
 package ch.master.gameproject;
 
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Random;
-
 import org.andengine.audio.music.Music;
 import org.andengine.audio.music.MusicFactory;
 import org.andengine.audio.sound.Sound;
 import org.andengine.audio.sound.SoundFactory;
 import org.andengine.engine.Engine;
 import org.andengine.engine.camera.Camera;
-import org.andengine.engine.handler.IUpdateHandler;
-import org.andengine.engine.handler.timer.ITimerCallback;
-import org.andengine.engine.handler.timer.TimerHandler;
 import org.andengine.engine.options.EngineOptions;
 import org.andengine.engine.options.ScreenOrientation;
 import org.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
-import org.andengine.entity.modifier.MoveModifier;
-import org.andengine.entity.modifier.MoveXModifier;
 import org.andengine.entity.scene.CameraScene;
 import org.andengine.entity.scene.IOnSceneTouchListener;
 import org.andengine.entity.scene.Scene;
 import org.andengine.entity.scene.background.AutoParallaxBackground;
-import org.andengine.entity.scene.background.Background;
 import org.andengine.entity.scene.background.ParallaxBackground.ParallaxEntity;
 import org.andengine.entity.sprite.AnimatedSprite;
 import org.andengine.entity.sprite.Sprite;
 import org.andengine.entity.text.Text;
 import org.andengine.entity.util.FPSLogger;
 import org.andengine.input.touch.TouchEvent;
-import org.andengine.input.touch.controller.MultiTouch;
-import org.andengine.input.touch.controller.MultiTouchController;
 import org.andengine.opengl.font.Font;
-import org.andengine.opengl.font.FontFactory;
 import org.andengine.opengl.texture.TextureOptions;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
 import org.andengine.opengl.texture.region.TextureRegion;
 import org.andengine.opengl.texture.region.TiledTextureRegion;
 import org.andengine.ui.activity.BaseActivity;
-import org.andengine.ui.activity.BaseGameActivity;
 import org.andengine.ui.activity.SimpleBaseGameActivity;
 import org.andengine.util.color.Color;
 
@@ -51,13 +37,9 @@ import ch.master.gameproject.sprite.PlayerSprite;
 import ch.master.gameproject.sprite.TargetSprite;
 import ch.master.gameproject.sprite.ProjectileSprite;
 
-import android.os.Bundle;
-import android.app.Activity;
-
 import android.graphics.Typeface;
 import android.view.Display;
 import android.view.KeyEvent;
-import android.view.Menu;
 import android.widget.Toast;
 
 public class MainActivity extends SimpleBaseGameActivity implements
@@ -68,10 +50,15 @@ public class MainActivity extends SimpleBaseGameActivity implements
 
 	private Sound shootingSound;
 	public Music backgroundMusic;
+	
+	
+	
+	
 
 	private BitmapTextureAtlas mAutoParallaxBackgroundTexture;
 	private TextureRegion mParallaxLayer;
 
+	
 	public TargetSprite targetSprite;
 	public ProjectileSprite projectileSprite;
 	public PlayerSprite playerSprite;
