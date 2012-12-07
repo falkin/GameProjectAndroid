@@ -73,6 +73,7 @@ public class MainActivity extends SimpleBaseGameActivity implements
 	private BitmapTextureAtlas mAutoParallaxBackgroundTexture;
 	private TextureRegion mParallaxLayer;
 
+	
 	public TargetSprite targetSprite;
 	public ProjectileSprite projectileSprite;
 	public PlayerSprite playerSprite;
