@@ -13,6 +13,7 @@ import org.andengine.entity.sprite.Sprite;
 import org.andengine.util.adt.pool.GenericPool;
 
 import ch.master.gameproject.MainActivity;
+import ch.master.gameproject.ressource.InitRessources;
 
 public class TargetSprite extends GenericPool<AnimatedSprite> {
 
@@ -126,15 +127,15 @@ public class TargetSprite extends GenericPool<AnimatedSprite> {
 
 	@Override
 	protected AnimatedSprite onAllocatePoolItem() {
-		int x = (int) ((int) mainActivity.mCamera.getWidth() + mainActivity.mTargetTextureRegion
+		int x = (int) ((int) mainActivity.mCamera.getWidth() + InitRessources.mTargetTextureRegion
 				.getWidth());
-		int minY = (int) mainActivity.mTargetTextureRegion.getHeight();
-		int maxY = (int) (mainActivity.mCamera.getHeight() - mainActivity.mTargetTextureRegion
+		int minY = (int) InitRessources.mTargetTextureRegion.getHeight();
+		int maxY = (int) (mainActivity.mCamera.getHeight() - InitRessources.mTargetTextureRegion
 				.getHeight());
 
 		int y = maxY - 35;
 		return new AnimatedSprite(x, y,
-				mainActivity.mTargetTextureRegion.deepCopy(),
+				InitRessources.mTargetTextureRegion.deepCopy(),
 				mainActivity.getVertexBufferObjectManager());
 
 	}

@@ -20,6 +20,10 @@ import org.andengine.util.modifier.IModifier.IModifierListener;
 
 import ch.master.gameproject.CoolDown;
 import ch.master.gameproject.MainActivity;
+import ch.master.gameproject.MainActivity.SceneType;
+import ch.master.gameproject.model.SoundManagerGame;
+import ch.master.gameproject.ressource.InitRessources;
+import ch.master.gameproject.scenes.GameScene;
 
 public class ProjectileSprite extends GenericPool<Sprite> {
 
@@ -28,21 +32,23 @@ public class ProjectileSprite extends GenericPool<Sprite> {
 	private TargetSprite targetSprite;
 	private LinkedList projectileLL;
 	private LinkedList projectilesToBeAdded;
-
-	public ProjectileSprite(MainActivity mainActivity, TargetSprite targetSprite) {
+	public GameScene gameScene;
+	
+	public ProjectileSprite(MainActivity mainActivity, TargetSprite targetSprite,GameScene gameScene) {
 		projectileLL = new LinkedList();
 		projectilesToBeAdded = new LinkedList();
 		this.mainActivity = mainActivity;
 		this.targetSprite = targetSprite;
+		this.gameScene = gameScene;
 	}
 
 	public void shootProjectile(final float pX, final float pY) {
 		if (!CoolDown.sharedCoolDown().checkValidity()) {
 			return;
 		}
-		mainActivity.player.animate(50, false);
-		int offX = (int) (pX - mainActivity.player.getX() + 10);
-		int offY = (int) (pY - mainActivity.player.getY() + 10);
+		gameScene.player.animate(50, false);
+		int offX = (int) (pX - gameScene.player.getX() + 10);
+		int offY = (int) (pY - gameScene.player.getY() + 10);
 
 		final Sprite projectile;
 		projectile = obtainPoolItem();
@@ -83,11 +89,11 @@ public class ProjectileSprite extends GenericPool<Sprite> {
 			@Override
 			public void onModifierFinished(IModifier<IEntity> pModifier,
 					IEntity pItem) {
-				mainActivity.soundShooting();
+				SoundManagerGame.startMusic(InitRessources.shootingSound);
 				projectile.setVisible(true);
-				projectile.setPosition(mainActivity.player.getX()
-						+ mainActivity.player.getWidth(),
-						mainActivity.player.getY());
+				projectile.setPosition(gameScene.player.getX()
+						+ gameScene.player.getWidth(),
+						gameScene.player.getY());
 
 				projectilesToBeAdded.add(projectile);
 
@@ -111,8 +117,11 @@ public class ProjectileSprite extends GenericPool<Sprite> {
 			boolean hasTarget = false;
 			while (targets.hasNext()) {
 				_target = targets.next();
-				if (mainActivity.player.collidesWith(_target))
-					mainActivity.fail();
+				if (gameScene.player.collidesWith(_target)){
+					mainActivity.currentScene = SceneType.GAMEOVER;
+					mainActivity.onSceneTouchEvent(null,null);
+				}
+					
 				hasTarget = true;
 				Iterator<Sprite> projectiles = projectileLL.iterator();
 				Sprite _projectile;
@@ -132,9 +141,9 @@ public class ProjectileSprite extends GenericPool<Sprite> {
 						recyclePoolItem(_projectile);
 
 						removeSprite(_projectile, projectiles);
-						mainActivity.hitCount++;
-						mainActivity.score.setText(String
-								.valueOf(mainActivity.hitCount));
+						gameScene.hitCount++;
+						gameScene.score.setText(String
+								.valueOf(gameScene.hitCount));
 						hit = true;
 						break;
 					}
@@ -170,8 +179,9 @@ public class ProjectileSprite extends GenericPool<Sprite> {
 			targetSprite.getTargetLL().addAll(
 					targetSprite.getTargetsToBeAdded());
 			targetSprite.getTargetsToBeAdded().clear();
-			if (mainActivity.hitCount >= 4) {
-				mainActivity.win();
+			if (gameScene.hitCount >= 4) {
+				mainActivity.currentScene = SceneType.WIN;
+				mainActivity.onSceneTouchEvent(null,null);
 			}
 		}
 
@@ -198,7 +208,7 @@ public class ProjectileSprite extends GenericPool<Sprite> {
 	protected Sprite onAllocatePoolItem() {
 		// TODO Auto-generated method stub
 		return new Sprite(0, 0,
-				mainActivity.mProjectileTextureRegion.deepCopy(),
+				InitRessources.mProjectileTextureRegion.deepCopy(),
 				mainActivity.getVertexBufferObjectManager());
 	}
 

@@ -1,107 +1,85 @@
 package ch.master.gameproject;
 
-import java.io.IOException;
-import org.andengine.audio.music.Music;
-import org.andengine.audio.music.MusicFactory;
-import org.andengine.audio.sound.Sound;
-import org.andengine.audio.sound.SoundFactory;
+
 import org.andengine.engine.Engine;
 import org.andengine.engine.camera.Camera;
+import org.andengine.engine.handler.timer.ITimerCallback;
+import org.andengine.engine.handler.timer.TimerHandler;
 import org.andengine.engine.options.EngineOptions;
 import org.andengine.engine.options.ScreenOrientation;
 import org.andengine.engine.options.resolutionpolicy.RatioResolutionPolicy;
-import org.andengine.entity.scene.CameraScene;
 import org.andengine.entity.scene.IOnSceneTouchListener;
 import org.andengine.entity.scene.Scene;
-import org.andengine.entity.scene.background.AutoParallaxBackground;
-import org.andengine.entity.scene.background.ParallaxBackground.ParallaxEntity;
 import org.andengine.entity.sprite.AnimatedSprite;
 import org.andengine.entity.sprite.Sprite;
-import org.andengine.entity.text.Text;
 import org.andengine.entity.util.FPSLogger;
 import org.andengine.input.touch.TouchEvent;
-import org.andengine.opengl.font.Font;
 import org.andengine.opengl.texture.TextureOptions;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlas;
 import org.andengine.opengl.texture.atlas.bitmap.BitmapTextureAtlasTextureRegionFactory;
-import org.andengine.opengl.texture.region.TextureRegion;
-import org.andengine.opengl.texture.region.TiledTextureRegion;
+import org.andengine.opengl.texture.region.ITextureRegion;
+import org.andengine.opengl.util.GLState;
 import org.andengine.ui.activity.BaseActivity;
-import org.andengine.ui.activity.SimpleBaseGameActivity;
-import org.andengine.util.color.Color;
+import org.andengine.ui.activity.BaseGameActivity;
 
-import ch.master.gameproject.scenes.FailScenes;
-import ch.master.gameproject.scenes.PauseScenes;
-import ch.master.gameproject.scenes.WinScenes;
-import ch.master.gameproject.sprite.PlayerSprite;
-import ch.master.gameproject.sprite.TargetSprite;
-import ch.master.gameproject.sprite.ProjectileSprite;
-
-import android.graphics.Typeface;
+import ch.master.gameproject.model.SoundManagerGame;
+import ch.master.gameproject.ressource.InitRessources;
+import ch.master.gameproject.scenes.GameScene;
+import ch.master.gameproject.scenes.InitMenuScene;
+import ch.master.gameproject.scenes.LevelMenuScene;
+import ch.master.gameproject.scenes.OptMenuScene;
+import ch.master.gameproject.scenes.StyleMenuScene;
 import android.view.Display;
 import android.view.KeyEvent;
 import android.widget.Toast;
 
-public class MainActivity extends SimpleBaseGameActivity implements
+public class MainActivity extends BaseGameActivity implements
 		IOnSceneTouchListener {
 
 	static final int CAMERA_WIDTH = 800;
 	static final int CAMERA_HEIGHT = 480;
 
-	private Sound shootingSound;
-	public Music backgroundMusic;
-	
-	
-	
-	
-
-	private BitmapTextureAtlas mAutoParallaxBackgroundTexture;
-	private TextureRegion mParallaxLayer;
-
-	
-	public TargetSprite targetSprite;
-	public ProjectileSprite projectileSprite;
-	public PlayerSprite playerSprite;
-	public Font mFont;
+	private Scene splashScene ;
+	private Sprite splash;
 	public Camera mCamera;
-
-	public TiledTextureRegion mTargetTextureRegion;
-	public TextureRegion mProjectileTextureRegion;
-	public TiledTextureRegion mPlayerTextureRegion;
-
-	private BitmapTextureAtlas mBitmapTextureAtlas;
-
-	public AnimatedSprite player;
-
-	public TextureRegion mPausedTextureRegion;
-
-	private PauseScenes pauseScene;
-	private WinScenes winScene;
-	private FailScenes failScene;
 
 	private int cameraWidth;
 	private int cameraHeight;
 
-	private BitmapTextureAtlas sheetBitmapTextureAtlas;
-
-	private CameraScene mResultScene;
-
-	private boolean runningFlag = false;
-	private boolean pauseFlag = false;
-
-	public Text score;
-	private BitmapTextureAtlas mFontTexture;
-
-	public int hitCount;
-	private final int maxScore = 10;
-
-	public TextureRegion mWinTextureRegion;
-	public TextureRegion mFailTextureRegion;
-
 	// A reference to the current scene
-	public Scene mCurrentScene;
+	public GameScene mCurrentScene;
+	public InitMenuScene initScene;
+	public OptMenuScene optMenuScene;
+	public StyleMenuScene worldMenuScene;
+	public LevelMenuScene levelMenuScene;
 	public static BaseActivity instance;
-
+    
+	
+	// ************* Images texture ********************
+	private BitmapTextureAtlas splashTextureAtlas;
+	private ITextureRegion splashTextureRegion;
+	
+	// ************* Scenes modes ********************
+	public enum SceneType
+    {
+			SPLASH,
+			INITMENU,
+			STARTGAME,
+		    RESUMEGAME,
+		    RESTARTGAME,
+			LOADGAME,
+			OPTIONS,
+			WORLD_SELECTION,
+			LEVEL_SELECTION,
+			PAUSE,
+			GAMEOVER,
+			WIN
+	}
+		
+	public SceneType currentScene = SceneType.SPLASH;	
+	
+	
+	
 	@Override
 	public EngineOptions onCreateEngineOptions() {
 		final Display display = getWindowManager().getDefaultDisplay();
@@ -109,277 +87,333 @@ public class MainActivity extends SimpleBaseGameActivity implements
 		cameraHeight = display.getHeight();
 		instance = this;
 		mCamera = new Camera(0, 0, cameraWidth, cameraHeight);
-
-		targetSprite = new TargetSprite(this);
-		projectileSprite = new ProjectileSprite(this, targetSprite);
-		playerSprite = new PlayerSprite(this);
-
-		winScene = new WinScenes(this);
-		failScene = new FailScenes(this);
-		pauseScene = new PauseScenes(this);
-
 		EngineOptions engineOptions = new EngineOptions(true,
 				ScreenOrientation.LANDSCAPE_FIXED, new RatioResolutionPolicy(
 						cameraWidth, cameraHeight), mCamera);
-
 		engineOptions.getAudioOptions().setNeedsMusic(true);
 		engineOptions.getAudioOptions().setNeedsSound(true);
 		engineOptions.getTouchOptions().setNeedsMultiTouch(true);
-
 		return engineOptions;
-
 	}
 
 	@Override
-	public void onCreateResources() {
-		mBitmapTextureAtlas = new BitmapTextureAtlas(getTextureManager(), 512,
-				512, TextureOptions.BILINEAR_PREMULTIPLYALPHA);
-		sheetBitmapTextureAtlas = new BitmapTextureAtlas(getTextureManager(),
-				2048, 512);
-
-		mAutoParallaxBackgroundTexture = new BitmapTextureAtlas(
-				getTextureManager(), 2048, 1024, TextureOptions.DEFAULT);
-
+	public void onCreateResources(OnCreateResourcesCallback pOnCreateResourcesCallback)     throws Exception {
 		BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("gfx/");
-		mParallaxLayer = BitmapTextureAtlasTextureRegionFactory
-				.createFromAsset(this.mAutoParallaxBackgroundTexture, this,
-						"background.png", 0, 0);
-
-		mPlayerTextureRegion = BitmapTextureAtlasTextureRegionFactory
-				.createTiledFromAsset(sheetBitmapTextureAtlas, this,
-						"hero.png", 0, 212, 11, 1);
-	
-		mTargetTextureRegion = BitmapTextureAtlasTextureRegionFactory
-				.createTiledFromAsset(sheetBitmapTextureAtlas, this,
-						"zombieBig.png", 0, 0, 3, 1);
-
-		mProjectileTextureRegion = BitmapTextureAtlasTextureRegionFactory
-				.createFromAsset(this.mBitmapTextureAtlas, this, "bullet.png",
-						64, 0);
-
-		mPausedTextureRegion = BitmapTextureAtlasTextureRegionFactory
-				.createFromAsset(this.mBitmapTextureAtlas, this, "paused.png",
-						0, 64);
-
-		mWinTextureRegion = BitmapTextureAtlasTextureRegionFactory
-				.createFromAsset(this.mBitmapTextureAtlas, this, "win.png", 0,
-						128);
-		mFailTextureRegion = BitmapTextureAtlasTextureRegionFactory
-				.createFromAsset(this.mBitmapTextureAtlas, this, "fail.png", 0,
-						256);
-
-		mFontTexture = new BitmapTextureAtlas(getTextureManager(), 256, 256,
-				TextureOptions.BILINEAR_PREMULTIPLYALPHA);
-		mFont = new Font(getFontManager(), mFontTexture, Typeface.create(
-				Typeface.DEFAULT, Typeface.BOLD), 40, true, Color.WHITE);
-		mEngine.getTextureManager().loadTexture(mFontTexture);
-		mEngine.getFontManager().loadFont(mFont);
-
-		mEngine.getTextureManager().loadTexture(mBitmapTextureAtlas);
-		mEngine.getTextureManager().loadTexture(sheetBitmapTextureAtlas);
-		mEngine.getTextureManager().loadTexture(mAutoParallaxBackgroundTexture);
-		SoundFactory.setAssetBasePath("gfx/");
-		try {
-			shootingSound = SoundFactory.createSoundFromAsset(
-					mEngine.getSoundManager(), this, "pew_pew_lei.wav");
-		} catch (IllegalStateException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
-		MusicFactory.setAssetBasePath("gfx/");
-
-		try {
-			backgroundMusic = MusicFactory
-					.createMusicFromAsset(mEngine.getMusicManager(), this,
-							"background_music_aac.wav");
-			backgroundMusic.setLooping(true);
-		} catch (IllegalStateException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-
+		splashTextureAtlas =  new BitmapTextureAtlas(
+				getTextureManager(), 1280, 720, TextureOptions.DEFAULT);
+		splashTextureRegion =BitmapTextureAtlasTextureRegionFactory
+				.createFromAsset(this.splashTextureAtlas, this,
+						"loadingBack.png", 0, 0);
+		
+		InitRessources.sheetBitmapTextureAtlass = new BitmapTextureAtlas(getTextureManager(),
+				2048, 512);
+		InitRessources.loadingTextureRegion = BitmapTextureAtlasTextureRegionFactory
+				.createTiledFromAsset(InitRessources.sheetBitmapTextureAtlass, this,
+						"LoadingCircle.png",0,0  ,8, 1);
+		
+		splashTextureAtlas.load();
+		InitRessources.sheetBitmapTextureAtlass.load();
+		pOnCreateResourcesCallback.onCreateResourcesFinished();
 	}
 
 	@Override
-	protected Scene onCreateScene() {
-
-		mEngine.registerUpdateHandler(new FPSLogger());
-		mCurrentScene = new Scene();
-		// background preperations
-		final AutoParallaxBackground autoParallaxBackground = new AutoParallaxBackground(
-				0, 0, 0, 4);
-		autoParallaxBackground.attachParallaxEntity(new ParallaxEntity(-25.0f,
-				new Sprite(0, mCamera.getHeight()
-						- this.mParallaxLayer.getHeight(), this.mParallaxLayer,
-						getVertexBufferObjectManager())));
-		mCurrentScene.setBackground(autoParallaxBackground);
-
-		player = playerSprite.createPlayer();
-		mCurrentScene.registerTouchArea(player);
-
-		targetSprite.createSpriteSpawnTimeHandler();
-
-		mCurrentScene.registerUpdateHandler(targetSprite.detect);
-
-		mCurrentScene.registerUpdateHandler(projectileSprite.detect);
-
-		mCurrentScene.setOnSceneTouchListener(this);
-		pauseScene.loadPauseScene();
-		winScene.loadWinScene();
-		failScene.loadFailScene();
-
-		mResultScene = new CameraScene(mCamera);
-		mResultScene.attachChild(winScene.getWinSprite());
-		mResultScene.attachChild(failScene.getFailSprite());
-		mResultScene.setBackgroundEnabled(false);
-
-		score = new Text(0, 0, mFont, String.valueOf(maxScore),
-				getVertexBufferObjectManager());
-		score.setPosition(mCamera.getWidth() - score.getWidth() - 5, 5);
-
-		hitCount = 0;
-		score.setText(String.valueOf(hitCount));
-		mCurrentScene.attachChild(score);
-		backgroundMusic.play();
-		backgroundMusic.setVolume(3);
-
-		return mCurrentScene;
+	public void onCreateScene(OnCreateSceneCallback pOnCreateSceneCallback)
+	 throws Exception {
+		initSplashScene();
+        pOnCreateSceneCallback.onCreateSceneFinished(this.splashScene);
 	}
 
+	
 	public boolean onSceneTouchEvent(Scene pScene, TouchEvent pSceneTouchEvent) {
 
-		if (pSceneTouchEvent.getAction() == TouchEvent.ACTION_DOWN) {
-			final float touchX = pSceneTouchEvent.getX();
-			final float touchY = pSceneTouchEvent.getY();
-
-			projectileSprite.shootProjectile(touchX, touchY);
-			return true;
-		}
-		return false;
+	
+			switch (currentScene)
+	    	{
+	    		case SPLASH:
+	    			break;
+	    		case INITMENU:
+	    			SoundManagerGame.startMusic(InitRessources.backgroundMusicMenu);
+	    			mEngine.getScene().detachSelf();
+	    			loadInitScenes();
+    			    mEngine.setScene(initScene);    
+    			    initScene.initMenu();
+	    			break;
+	    		case WORLD_SELECTION:
+	    			mEngine.getScene().detachSelf();
+	    			 loadWorldScenes();
+    			    mEngine.setScene(worldMenuScene);    
+    			    worldMenuScene.initMenu();
+	    			break;
+	    		case LEVEL_SELECTION:
+	    			mEngine.getScene().detachSelf();
+	    			loadLevelScenes();
+   			        mEngine.setScene(levelMenuScene);    
+   			        levelMenuScene.initMenu();
+	    			break;
+	    		case LOADGAME:
+	    			    SoundManagerGame.pauseMusic(InitRessources.backgroundMusicMenu);
+	    			    mEngine.getScene().detachSelf();
+	    			    loadGameScenes();
+	    			    mEngine.setScene(mCurrentScene);    
+	    			    mCurrentScene.initGame();
+	    			    currentScene = SceneType.STARTGAME;
+	    			    
+	    			break;
+	    		case STARTGAME:
+	    			if (pSceneTouchEvent.getAction() == TouchEvent.ACTION_DOWN) {
+	    				final float touchX = pSceneTouchEvent.getX();
+	    				final float touchY = pSceneTouchEvent.getY();
+	    				mCurrentScene.shootProjectil(touchX,touchY);
+	    			}
+	    			break;
+	    		case OPTIONS:
+	    			mEngine.getScene().detachSelf();
+    			    loadOptScenes();
+    			    mEngine.setScene(optMenuScene);    
+    			    optMenuScene.initMenu();
+    			break;
+	    		case RESUMEGAME:
+	    			 SoundManagerGame.pauseMusic(InitRessources.backgroundMusicMenu);
+					mCurrentScene.unPauseGame();
+				    if (!InitRessources.backgroundMusic.isPlaying())
+						SoundManagerGame.startMusic(InitRessources.backgroundMusic);
+				    currentScene = SceneType.STARTGAME;
+				    getMEngine().start();
+	    			break;
+	    		case RESTARTGAME:
+	    			 SoundManagerGame.pauseMusic(InitRessources.backgroundMusicMenu);
+	    			 mEngine.stop();
+	    	    	 mEngine.getScene().detachSelf();			
+	    			 loadGameScenes();
+	    			 mEngine.setScene(mCurrentScene);    
+	    			 mCurrentScene.initGame();
+	    			 currentScene = SceneType.STARTGAME;
+	    			 getMEngine().start();
+	    			break;
+	    		case PAUSE:
+	    				SoundManagerGame.pauseMusic(InitRessources.backgroundMusic);
+	    				
+	    				mCurrentScene.pauseGame();
+	    							
+	    			break;
+	    		case GAMEOVER:
+	    			SoundManagerGame.stopMusic(InitRessources.backgroundMusic);
+	    			
+	    			mCurrentScene.fail();
+	    			
+	    			
+	    			break;
+	    		case WIN:
+	    			SoundManagerGame.stopMusic(InitRessources.backgroundMusic);
+	    			
+	    		    mCurrentScene.win();
+	    		  
+	    			break;
+	    		default :
+	    			break;
+	    	}
+		return true;
 	}
 
 	@Override
-	public boolean onKeyDown(final int pKeyCode, final KeyEvent pEvent) {
-		if (pKeyCode == KeyEvent.KEYCODE_MENU
-				&& pEvent.getAction() == KeyEvent.ACTION_DOWN) {
-			if (mEngine.isRunning()) {
-				pauseMusic();
-				pauseFlag = true;
-				pauseScene.pauseGame();
-				Toast.makeText(this, "Menu button to resume",
-						Toast.LENGTH_SHORT).show();
-			} else {
-				pauseScene.unPauseGame();
-				pauseFlag = false;
-
-				if (!backgroundMusic.isPlaying())
-					resumeMusic();
-			}
+	public boolean onKeyUp(final int pKeyCode, final KeyEvent pEvent) {
+		  if (pKeyCode == KeyEvent.KEYCODE_MENU && pEvent.getAction() == KeyEvent.ACTION_UP) {
+			 if(currentScene == SceneType.STARTGAME ||  currentScene == SceneType.PAUSE){
+				 if (mEngine.isRunning()) {
+					 
+					SoundManagerGame.startMusic(InitRessources.clickSound);
+				    currentScene = SceneType.PAUSE;
+					return onSceneTouchEvent(null,null);
+				} 
+				else {
+					 SoundManagerGame.startMusic(InitRessources.clickSound);
+					currentScene = SceneType.RESUMEGAME;
+					return onSceneTouchEvent(null,null);
+				}
+			}			 
 			return true;
-		} else if (pKeyCode == KeyEvent.KEYCODE_BACK
-				&& pEvent.getAction() == KeyEvent.ACTION_DOWN) {
-
-			if (!mEngine.isRunning() && backgroundMusic.isPlaying()) {
-				mCurrentScene.clearChildScene();
-				mEngine.start();
-				restart();
-				return true;
-			}
-			return super.onKeyDown(pKeyCode, pEvent);
+		} else if (pKeyCode == KeyEvent.KEYCODE_BACK && pEvent.getAction() == KeyEvent.ACTION_UP) {
+			switch (currentScene)
+	    	{
+	    		case SPLASH:
+	    			break;
+	    		case INITMENU:
+	    			 SoundManagerGame.startMusic(InitRessources.clickSound);
+	    			finihGame();
+	    			break;
+	    		case WORLD_SELECTION:
+	    			 SoundManagerGame.startMusic(InitRessources.clickSound);
+	    			currentScene = SceneType.INITMENU;
+	    			return onSceneTouchEvent(null,null);
+	    			
+	    		case LEVEL_SELECTION:
+	    			 SoundManagerGame.startMusic(InitRessources.clickSound);
+	    			currentScene = SceneType.WORLD_SELECTION;
+	    			return onSceneTouchEvent(null,null);
+	    			
+	    		/*case STARTGAME:
+	    			if (mEngine.isRunning() && InitRessources.backgroundMusic.isPlaying()) {
+	    				mCurrentScene.clearChildScene();
+	    				mEngine.start();
+	    				restart();
+	    				retusrn true;
+	    			}
+	    			break;*/
+	    		case OPTIONS:
+	    			 SoundManagerGame.startMusic(InitRessources.clickSound);
+	    			currentScene = SceneType.INITMENU;
+	    			return onSceneTouchEvent(null,null);
+	    		default :
+	    		break;
+	    	
+	    	}
+			return true;	
 		}
-		return super.onKeyDown(pKeyCode, pEvent);
+		else if (pEvent.getAction() == KeyEvent.ACTION_DOWN) {
+			return false;
+		}
+		
+		return true;
 	}
+	
 
-	public void soundShooting() {
-		shootingSound.play();
-	}
 
 	public Engine getMEngine() {
 		return mEngine;
 	}
 
-	public void restart() {
-
-		runOnUpdateThread(new Runnable() {
-
-			@Override
-			public void run() {
-				resumeMusic();
-				mCurrentScene.detachChildren();
-				mCurrentScene.attachChild(player);
-				mCurrentScene.attachChild(score);
-			}
-		});
-		pauseMusic();
-		hitCount = 0;
-		runningFlag = false;
-		score.setText(String.valueOf(hitCount));
-		targetSprite.clear();
-		projectileSprite.clear();
-
-	}
-
-	public void fail() {
-		if (mEngine.isRunning()) {
-			winScene.getWinSprite().setVisible(false);
-			failScene.getFailSprite().setVisible(true);
-			mCurrentScene.setChildScene(mResultScene, false, true, true);
-			mEngine.stop();
-			resumeMusic();
-		}
-	}
-
-	public void win() {
-		if (mEngine.isRunning()) {
-			failScene.getFailSprite().setVisible(false);
-			winScene.getWinSprite().setVisible(true);
-			mCurrentScene.setChildScene(mResultScene, false, true, true);
-			mEngine.stop();
-			resumeMusic();
-		}
-	}
-
-	public void pauseMusic() {
-		if (backgroundMusic.isPlaying())
-			backgroundMusic.pause();
-	}
-
-	public void resumeMusic() {
-		if (!backgroundMusic.isPlaying())
-			backgroundMusic.resume();
-	}
-
 	@Override
-	public void onResumeGame() {
-		super.onResumeGame();
-		if (runningFlag) {
-			if (pauseFlag) {
-				pauseFlag = false;
-				Toast.makeText(this, "Menu button to resume",
-						Toast.LENGTH_SHORT).show();
-			} else {
-				resumeMusic();
-				// mEngine.stop();
-			}
-		} else {
-			runningFlag = true;
+	protected void onResume() {
+		if (currentScene != SceneType.STARTGAME && currentScene != SceneType.SPLASH) {
+			SoundManagerGame.resumeMusic(InitRessources.backgroundMusicMenu);
 		}
+		super.onResume();
 	}
-
+	
 	@Override
 	protected void onPause() {
-		if (runningFlag) {
-			pauseMusic();
-			if (mEngine.isRunning()) {
-				pauseScene.pauseGame();
-				pauseFlag = true;
-			}
-			pauseFlag = true;
+		if(currentScene != SceneType.SPLASH)	
+			SoundManagerGame.pauseMusic(InitRessources.backgroundMusicMenu);
+		if (currentScene == SceneType.STARTGAME) {
+			currentScene = SceneType.PAUSE;
+			onSceneTouchEvent(null,null);
 		}
 		super.onPause();
+	}
+	
+	
+	
+	
+	private void initSplashScene()
+	{
+	    splashScene = new Scene();
+	    splash = new Sprite(0, 0, splashTextureRegion, mEngine.getVertexBufferObjectManager())
+	    {
+	        @Override
+	        protected void preDraw(GLState pGLState, Camera pCamera)
+	        {
+	            super.preDraw(pGLState, pCamera);
+	            pGLState.enableDither();
+	        }
+	    };
+	    int x =   (int)((cameraWidth - 102) * 0.5);
+		int y = (int)((cameraHeight - 102) * 0.5);
+	    AnimatedSprite s= new AnimatedSprite(x, y,InitRessources.loadingTextureRegion.deepCopy(),getVertexBufferObjectManager());
+	    s.getTiledTextureRegion();
+	    s.animate(120);
+	    splash.attachChild(s);
+	    splash.setPosition((cameraWidth - splash.getWidth()) * 0.5f, (cameraHeight - splash.getHeight()) * 0.5f);
+	    splashScene.attachChild(splash);
+	}
+
+	
+	@Override
+	public void onPopulateScene(Scene pScene,OnPopulateSceneCallback pOnPopulateSceneCallback) throws Exception {
+	
+		mEngine.registerUpdateHandler(new TimerHandler(1f, new ITimerCallback() 
+		{
+            public void onTimePassed(final TimerHandler pTimerHandler) 
+            {
+            	mEngine.unregisterUpdateHandler(pTimerHandler);
+            	loadRessouces();    
+                splashScene.detachSelf();  
+                loadInitScenes();
+                mEngine.setScene(initScene);
+                initScene.initMenu();
+                SoundManagerGame.startMusic(InitRessources.backgroundMusicMenu);
+                currentScene = SceneType.INITMENU;
+                getMEngine().start();
+            }
+		}));
+		pOnPopulateSceneCallback.onPopulateSceneFinished();	
+	}
+	
+	private void loadRessouces()
+	{
+		InitRessources.initRessources(this);
+		SoundManagerGame.loadHighScore();
+		mEngine.getTextureManager().loadTexture(InitRessources.mFontTexture);
+		mEngine.getFontManager().loadFont(InitRessources.mFont);
+		mEngine.getTextureManager().loadTexture(InitRessources.mFontTextureBD);
+		mEngine.getFontManager().loadFont(InitRessources.mFontBD);
+		mEngine.getTextureManager().loadTexture(InitRessources.mBitmapTextureAtlas);
+		mEngine.getTextureManager().loadTexture(InitRessources.sheetBitmapTextureAtlas);
+		mEngine.getTextureManager().loadTexture(InitRessources.splashTextureAtlasBack);
+		mEngine.getTextureManager().loadTexture(InitRessources.mBtExit);
+		mEngine.getTextureManager().loadTexture(InitRessources.mBtPlay);
+		mEngine.getTextureManager().loadTexture(InitRessources.mBtTools);
+		mEngine.getTextureManager().loadTexture(InitRessources.mBtSoundOff);
+		mEngine.getTextureManager().loadTexture(InitRessources.mBtSoundOn);
+		mEngine.getTextureManager().loadTexture(InitRessources.mBtBack);
+		mEngine.getTextureManager().loadTexture(InitRessources.mBtNext);
+		mEngine.getTextureManager().loadTexture(InitRessources.mBtWW);
+		mEngine.getTextureManager().loadTexture(InitRessources.mBtLvl1);
+	    mEngine.getTextureManager().loadTexture(InitRessources.mBtQuit);
+		mEngine.getTextureManager().loadTexture(InitRessources.mBtResume);
+		mEngine.getTextureManager().loadTexture(InitRessources.mBtRestart);
+		mEngine.getTextureManager().loadTexture(InitRessources.mAutoParallaxBackgroundTexture);
+		mEngine.getTextureManager().loadTexture(InitRessources.splashTextureAtlasBackOpt);
+		mEngine.getTextureManager().loadTexture(InitRessources.splashTextureAtlasBackWorld);
+		mEngine.getTextureManager().loadTexture(InitRessources.splashTextureAtlasBackLevel);
+		mEngine.getTextureManager().loadTexture(InitRessources.splashTextureAtlasBackPause);
+		mEngine.getTextureManager().loadTexture(InitRessources.splashTextureAtlasBackWin);
+		mEngine.getTextureManager().loadTexture(InitRessources.splashTextureAtlasBackLose);
+	}
+	
+	private void loadInitScenes()
+	{
+	    initScene  = new InitMenuScene(this);	
+		initScene.loadInitScene();
+	}
+	
+	private void loadWorldScenes()
+	{
+		worldMenuScene  = new StyleMenuScene(this);	
+		worldMenuScene.loadInitScene();
+	}
+	private void loadLevelScenes()
+	{
+		levelMenuScene  = new LevelMenuScene(this);	
+		levelMenuScene.loadInitScene();
+	}
+	private void loadOptScenes()
+	{
+		optMenuScene  = new OptMenuScene(this);	
+		optMenuScene.loadInitScene();
+	}
+	
+	private void loadGameScenes()
+	{
+		mEngine.registerUpdateHandler(new FPSLogger());
+		mCurrentScene  = new GameScene(this);	
+		mCurrentScene.loadInitScene();
+    
+	}
+
+	public void finihGame() {
+		mEngine.stop();
+		mEngine.clearDrawHandlers();
+		System.exit(0);
 	}
 
 }

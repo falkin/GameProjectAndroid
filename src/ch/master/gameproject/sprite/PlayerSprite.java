@@ -5,6 +5,7 @@ import org.andengine.entity.sprite.Sprite;
 import org.andengine.input.touch.TouchEvent;
 
 import ch.master.gameproject.MainActivity;
+import ch.master.gameproject.ressource.InitRessources;
 
 public class PlayerSprite {
 
@@ -16,11 +17,11 @@ public class PlayerSprite {
 
 	public AnimatedSprite createPlayer() {
 		final int PlayerX = (int) (60);
-		final int PlayerY = (int) (int) ((mainActivity.mCamera.getHeight() - mainActivity.mTargetTextureRegion
+		final int PlayerY = (int) (int) ((mainActivity.mCamera.getHeight() - InitRessources.mTargetTextureRegion
 				.getHeight()) - 15);
 
 		AnimatedSprite player = new AnimatedSprite(PlayerX, PlayerY,
-				mainActivity.mPlayerTextureRegion,
+				InitRessources.mPlayerTextureRegion,
 				mainActivity.getVertexBufferObjectManager());
 		player.getTiledTextureRegion();
 		
