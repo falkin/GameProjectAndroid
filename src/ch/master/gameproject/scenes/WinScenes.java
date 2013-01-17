@@ -10,6 +10,7 @@ import org.andengine.input.touch.TouchEvent;
 
 import ch.master.gameproject.MainActivity;
 import ch.master.gameproject.MainActivity.SceneType;
+import ch.master.gameproject.model.LevelManagerGame;
 import ch.master.gameproject.model.SoundManagerGame;
 import ch.master.gameproject.ressource.InitRessources;
 
@@ -70,6 +71,7 @@ public class WinScenes extends Scene  implements IOnAreaTouchListener{
 	@Override
 	public boolean onAreaTouched(TouchEvent pSceneTouchEvent,
 			ITouchArea pTouchArea, float pTouchAreaLocalX, float pTouchAreaLocalY) {
+		
 		if (pTouchArea.equals(resumeSprite)&& pSceneTouchEvent.getAction() == TouchEvent.ACTION_UP){
 			 SoundManagerGame.startMusic(InitRessources.clickSound);
 			mainActivity.mCurrentScene.clearChildScene();
@@ -83,10 +85,20 @@ public class WinScenes extends Scene  implements IOnAreaTouchListener{
 			 return mainActivity.onSceneTouchEvent(this,pSceneTouchEvent);
 		}
 		else if (pTouchArea.equals(nextSprite) && pSceneTouchEvent.getAction() == TouchEvent.ACTION_UP){
-			 SoundManagerGame.startMusic(InitRessources.clickSound);
-			mainActivity.mCurrentScene.clearChildScene();
-			mainActivity.currentScene = SceneType.LEVEL_SELECTION;
-		 return  mainActivity.onSceneTouchEvent(this,pSceneTouchEvent);
+			if(LevelManagerGame.getLevelNow()==3){
+				 SoundManagerGame.startMusic(InitRessources.clickSound);
+				 mainActivity.mCurrentScene.clearChildScene();
+				 mainActivity.currentScene = SceneType.LEVEL_SELECTION;
+			     return  mainActivity.onSceneTouchEvent(this,pSceneTouchEvent);
+				
+			}
+			else{
+				LevelManagerGame.setLevelSelect(LevelManagerGame.getLevelNow());
+				SoundManagerGame.startMusic(InitRessources.clickSound);
+				mainActivity.currentScene = SceneType.LOADGAME;
+				return  mainActivity.onSceneTouchEvent(this,pSceneTouchEvent);
+			}
+			
 		}
 		return false; 
 	}

@@ -22,6 +22,7 @@ import org.andengine.opengl.util.GLState;
 import org.andengine.ui.activity.BaseActivity;
 import org.andengine.ui.activity.BaseGameActivity;
 
+import ch.master.gameproject.model.LevelManagerGame;
 import ch.master.gameproject.model.SoundManagerGame;
 import ch.master.gameproject.ressource.InitRessources;
 import ch.master.gameproject.scenes.GameScene;
@@ -56,7 +57,7 @@ public class MainActivity extends BaseGameActivity implements
     
 	
 	// ************* Images texture ********************
-	private BitmapTextureAtlas splashTextureAtlas;
+	private BitmapTextureAtlas splashTextureAtlass;
 	private ITextureRegion splashTextureRegion;
 	
 	// ************* Scenes modes ********************
@@ -99,20 +100,20 @@ public class MainActivity extends BaseGameActivity implements
 	@Override
 	public void onCreateResources(OnCreateResourcesCallback pOnCreateResourcesCallback)     throws Exception {
 		BitmapTextureAtlasTextureRegionFactory.setAssetBasePath("gfx/");
-		splashTextureAtlas =  new BitmapTextureAtlas(
+		splashTextureAtlass =  new BitmapTextureAtlas(
 				getTextureManager(), 1280, 720, TextureOptions.DEFAULT);
 		splashTextureRegion =BitmapTextureAtlasTextureRegionFactory
-				.createFromAsset(this.splashTextureAtlas, this,
+				.createFromAsset(this.splashTextureAtlass, this,
 						"loadingBack.png", 0, 0);
 		
-		InitRessources.sheetBitmapTextureAtlass = new BitmapTextureAtlas(getTextureManager(),
+		InitRessources.sheetBitmapTextureAtlassLoad = new BitmapTextureAtlas(getTextureManager(),
 				2048, 512);
 		InitRessources.loadingTextureRegion = BitmapTextureAtlasTextureRegionFactory
-				.createTiledFromAsset(InitRessources.sheetBitmapTextureAtlass, this,
+				.createTiledFromAsset(InitRessources.sheetBitmapTextureAtlassLoad, this,
 						"LoadingCircle.png",0,0  ,8, 1);
 		
-		splashTextureAtlas.load();
-		InitRessources.sheetBitmapTextureAtlass.load();
+		splashTextureAtlass.load();
+		InitRessources.sheetBitmapTextureAtlassLoad.load();
 		pOnCreateResourcesCallback.onCreateResourcesFinished();
 	}
 
@@ -164,6 +165,7 @@ public class MainActivity extends BaseGameActivity implements
 	    				final float touchX = pSceneTouchEvent.getX();
 	    				final float touchY = pSceneTouchEvent.getY();
 	    				mCurrentScene.shootProjectil(touchX,touchY);
+	    				
 	    			}
 	    			break;
 	    		case OPTIONS:
@@ -197,15 +199,18 @@ public class MainActivity extends BaseGameActivity implements
 	    							
 	    			break;
 	    		case GAMEOVER:
-	    			SoundManagerGame.stopMusic(InitRessources.backgroundMusic);
-	    			
+	    			SoundManagerGame.pauseMusic(InitRessources.backgroundMusic);
+	    			SoundManagerGame.startMusic(InitRessources.loseSound);
 	    			mCurrentScene.fail();
 	    			
 	    			
 	    			break;
 	    		case WIN:
-	    			SoundManagerGame.stopMusic(InitRessources.backgroundMusic);
-	    			
+	    			if(LevelManagerGame.getLevelNow()+1<4 && LevelManagerGame.getLevelSelect()== LevelManagerGame.getLevelNow()){
+	    				LevelManagerGame.saveLevel(LevelManagerGame.getLevelNow()+1);
+	    			}
+	    			SoundManagerGame.pauseMusic(InitRessources.backgroundMusic);
+	    			SoundManagerGame.startMusic(InitRessources.winSound);
 	    		    mCurrentScene.win();
 	    		  
 	    			break;
@@ -222,6 +227,7 @@ public class MainActivity extends BaseGameActivity implements
 				 if (mEngine.isRunning()) {
 					 
 					SoundManagerGame.startMusic(InitRessources.clickSound);
+					SoundManagerGame.startMusic(InitRessources.pauseSound);
 				    currentScene = SceneType.PAUSE;
 					return onSceneTouchEvent(null,null);
 				} 
@@ -284,7 +290,7 @@ public class MainActivity extends BaseGameActivity implements
 
 	@Override
 	protected void onResume() {
-		if (currentScene != SceneType.STARTGAME && currentScene != SceneType.SPLASH) {
+		if (currentScene != SceneType.STARTGAME && currentScene != SceneType.SPLASH  && currentScene != SceneType.PAUSE) {
 			SoundManagerGame.resumeMusic(InitRessources.backgroundMusicMenu);
 		}
 		super.onResume();
@@ -318,7 +324,7 @@ public class MainActivity extends BaseGameActivity implements
 	    };
 	    int x =   (int)((cameraWidth - 102) * 0.5);
 		int y = (int)((cameraHeight - 102) * 0.5);
-	    AnimatedSprite s= new AnimatedSprite(x, y,InitRessources.loadingTextureRegion.deepCopy(),getVertexBufferObjectManager());
+	    AnimatedSprite s= new AnimatedSprite(x, y,InitRessources.loadingTextureRegion,getVertexBufferObjectManager());
 	    s.getTiledTextureRegion();
 	    s.animate(120);
 	    splash.attachChild(s);
@@ -335,11 +341,12 @@ public class MainActivity extends BaseGameActivity implements
             public void onTimePassed(final TimerHandler pTimerHandler) 
             {
             	mEngine.unregisterUpdateHandler(pTimerHandler);
-            	loadRessouces();    
+            	 loadRessouces();  
+            	 loadInitScenes();
+                 mEngine.setScene(initScene);
+                 initScene.initMenu();
                 splashScene.detachSelf();  
-                loadInitScenes();
-                mEngine.setScene(initScene);
-                initScene.initMenu();
+   
                 SoundManagerGame.startMusic(InitRessources.backgroundMusicMenu);
                 currentScene = SceneType.INITMENU;
                 getMEngine().start();
@@ -352,6 +359,7 @@ public class MainActivity extends BaseGameActivity implements
 	{
 		InitRessources.initRessources(this);
 		SoundManagerGame.loadHighScore();
+		LevelManagerGame.loadLevel();
 		mEngine.getTextureManager().loadTexture(InitRessources.mFontTexture);
 		mEngine.getFontManager().loadFont(InitRessources.mFont);
 		mEngine.getTextureManager().loadTexture(InitRessources.mFontTextureBD);
@@ -371,13 +379,35 @@ public class MainActivity extends BaseGameActivity implements
 	    mEngine.getTextureManager().loadTexture(InitRessources.mBtQuit);
 		mEngine.getTextureManager().loadTexture(InitRessources.mBtResume);
 		mEngine.getTextureManager().loadTexture(InitRessources.mBtRestart);
+		mEngine.getTextureManager().loadTexture(InitRessources.mBtPause);
+		mEngine.getTextureManager().loadTexture(InitRessources.mBtLife);
+		mEngine.getTextureManager().loadTexture(InitRessources.mBtDown);
+		mEngine.getTextureManager().loadTexture(InitRessources.mBtUp);
 		mEngine.getTextureManager().loadTexture(InitRessources.mAutoParallaxBackgroundTexture);
+		mEngine.getTextureManager().loadTexture(InitRessources.mAutoParallaxBackgroundTextureDeux);
+		mEngine.getTextureManager().loadTexture(InitRessources.mAutoParallaxBackgroundTextureTrois);
+		mEngine.getTextureManager().loadTexture(InitRessources.mAutoParallaxBackgroundTextureDeuxDeux);
+		mEngine.getTextureManager().loadTexture(InitRessources.mAutoParallaxBackgroundTextureQuatre);
 		mEngine.getTextureManager().loadTexture(InitRessources.splashTextureAtlasBackOpt);
 		mEngine.getTextureManager().loadTexture(InitRessources.splashTextureAtlasBackWorld);
 		mEngine.getTextureManager().loadTexture(InitRessources.splashTextureAtlasBackLevel);
 		mEngine.getTextureManager().loadTexture(InitRessources.splashTextureAtlasBackPause);
 		mEngine.getTextureManager().loadTexture(InitRessources.splashTextureAtlasBackWin);
 		mEngine.getTextureManager().loadTexture(InitRessources.splashTextureAtlasBackLose);
+		mEngine.getTextureManager().loadTexture(InitRessources.splashTextureAtlasBackFGW);
+		mEngine.getTextureManager().loadTexture(InitRessources.sheetBitmapTextureAtlasTarget);
+		mEngine.getTextureManager().loadTexture(InitRessources.sheetBitmapTextureAtlasHouse);
+		mEngine.getTextureManager().loadTexture(InitRessources.mBtLvl2Over);
+		mEngine.getTextureManager().loadTexture(InitRessources.mBtLvl1Over);
+		mEngine.getTextureManager().loadTexture(InitRessources.mBtLvl2);
+		mEngine.getTextureManager().loadTexture(InitRessources.mBtMuni);
+		mEngine.getTextureManager().loadTexture(InitRessources.sheetBitmapTextureAtlasBox);
+		mEngine.getTextureManager().loadTexture(InitRessources.sheetBitmapTextureAtlasBall);
+		mEngine.getTextureManager().loadTexture(InitRessources.sheetBitmapTextureAtlasTornado);
+		mEngine.getTextureManager().loadTexture(InitRessources.sheetBitmapTextureAtlasShoot);
+		mEngine.getTextureManager().loadTexture(InitRessources.sheetBitmapTextureAtlasPUp);
+		mEngine.getTextureManager().loadTexture(InitRessources.sheetBitmapTextureAtlasPDown);
+		mEngine.getTextureManager().loadTexture(InitRessources.sheetBitmapTextureAtlasPJump);
 	}
 	
 	private void loadInitScenes()
@@ -404,7 +434,8 @@ public class MainActivity extends BaseGameActivity implements
 	
 	private void loadGameScenes()
 	{
-		mEngine.registerUpdateHandler(new FPSLogger());
+		
+	
 		mCurrentScene  = new GameScene(this);	
 		mCurrentScene.loadInitScene();
     

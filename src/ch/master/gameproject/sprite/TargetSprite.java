@@ -20,34 +20,25 @@ public class TargetSprite extends GenericPool<AnimatedSprite> {
 	private MainActivity mainActivity;
 
 	private LinkedList targetLL;
-
 	private LinkedList TargetsToBeAdded;
-
-	public TargetSprite(MainActivity mainActivity) {
+    private HouseSprite houseSprite;
+	
+	public TargetSprite(MainActivity mainActivity,HouseSprite houseSprite) {
 		targetLL = new LinkedList();
 		TargetsToBeAdded = new LinkedList();
 		this.mainActivity = mainActivity;
+		this.houseSprite=houseSprite;
 	}
 
+	
 	public IUpdateHandler detect = new IUpdateHandler() {
 		@Override
 		public void reset() {
+			
 		}
 
 		@Override
 		public void onUpdate(float pSecondsElapsed) {
-
-			Iterator<AnimatedSprite> targets = targetLL.iterator();
-			AnimatedSprite _target;
-
-			while (targets.hasNext()) {
-				_target = targets.next();
-				if (_target.getX() <= -_target.getWidth()) {
-					recyclePoolItem(_target);
-					removeSprite(_target, targets);
-				}
-			}
-
 			targetLL.addAll(TargetsToBeAdded);
 			TargetsToBeAdded.clear();
 		}
@@ -56,42 +47,34 @@ public class TargetSprite extends GenericPool<AnimatedSprite> {
 	public void createSpriteSpawnTimeHandler() {
 		TimerHandler spriteTimerHandler;
 		int minDuration = 3;
-		int maxDuration = 8;
+		int maxDuration = 7;
 		Random rand = new Random();
 		int effectTimeSect = rand.nextInt(maxDuration) + minDuration;
 		float mEffectSpawnDelay = effectTimeSect;
 
-		spriteTimerHandler = new TimerHandler(mEffectSpawnDelay, true,
+		spriteTimerHandler = new TimerHandler(mEffectSpawnDelay, false,
 				new ITimerCallback() {
 
 					@Override
 					public void onTimePassed(TimerHandler pTimerHandler) {
-						addTarget();
+							addTarget();
+							
 					}
 				});
-
-		mainActivity.getEngine().registerUpdateHandler(spriteTimerHandler);
+		
+		mainActivity.mCurrentScene.registerUpdateHandler(spriteTimerHandler);
 	}
 
-	public void removeSprite(final Sprite _sprite, Iterator it) {
-		mainActivity.runOnUpdateThread(new Runnable() {
+	
+	
 
-			@Override
-			public void run() {
-				mainActivity.mCurrentScene.detachChild(_sprite);
-			}
-		});
-		it.remove();
-
-	}
 
 	public void addTarget() {
 		Random rand = new Random();
-
 		AnimatedSprite target = obtainPoolItem();
-		target.animate(300);
+		target.animate(200);
 		mainActivity.mCurrentScene.attachChild(target);
-		int minDuration = 5;
+		int minDuration = 4;
 		int maxDuration = 10;
 		int rangeDuration = maxDuration - minDuration;
 		int actualDuration = rand.nextInt(rangeDuration) + minDuration;
@@ -99,8 +82,8 @@ public class TargetSprite extends GenericPool<AnimatedSprite> {
 		MoveXModifier mod = new MoveXModifier(actualDuration, target.getX(),
 				-target.getWidth());
 		target.registerEntityModifier(mod.deepCopy());
-
 		TargetsToBeAdded.add(target);
+		createSpriteSpawnTimeHandler() ;
 
 	}
 
@@ -131,7 +114,7 @@ public class TargetSprite extends GenericPool<AnimatedSprite> {
 				.getWidth());
 		int minY = (int) InitRessources.mTargetTextureRegion.getHeight();
 		int maxY = (int) (mainActivity.mCamera.getHeight() - InitRessources.mTargetTextureRegion
-				.getHeight());
+				.getHeight()+20);
 
 		int y = maxY - 35;
 		return new AnimatedSprite(x, y,
@@ -146,5 +129,16 @@ public class TargetSprite extends GenericPool<AnimatedSprite> {
 		target.setVisible(false);
 		target.detachSelf();
 		target.reset();
+	}
+	
+	public void removeSprite(final Sprite _sprite, Iterator it) {
+		mainActivity.runOnUpdateThread(new Runnable() {
+			@Override
+			public void run() {
+				mainActivity.mCurrentScene.detachChild(_sprite);
+			}
+		});
+		it.remove();
+
 	}
 }

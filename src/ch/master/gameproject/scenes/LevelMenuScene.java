@@ -12,6 +12,7 @@ import org.andengine.input.touch.TouchEvent;
 
 import ch.master.gameproject.MainActivity;
 import ch.master.gameproject.MainActivity.SceneType;
+import ch.master.gameproject.model.LevelManagerGame;
 import ch.master.gameproject.model.SoundManagerGame;
 import ch.master.gameproject.ressource.InitRessources;
 import ch.master.gameproject.sprite.PlayerSprite;
@@ -22,6 +23,7 @@ public class LevelMenuScene extends Scene   implements IOnAreaTouchListener{
 
 	private MainActivity mainActivity;
     private Sprite playSprite;
+    private Sprite playSprite2;
     private Sprite backSprite;       
 	private CameraScene mInitScene;
 
@@ -49,10 +51,31 @@ public class LevelMenuScene extends Scene   implements IOnAreaTouchListener{
 		
 		final int xbtt = (int) (mainActivity.mCamera.getWidth()  - 180);
 	    final int ybtt = (int) (mainActivity.mCamera.getHeight() -(mainActivity.mCamera.getHeight()  - 30));
-		
-		playSprite = new Sprite(446,208,105,102,
-				InitRessources.btLvl1,
-		mainActivity.getVertexBufferObjectManager()) ;
+		if(LevelManagerGame.getLevelNow()==1){
+			playSprite = new Sprite(446,205,105,102,
+					InitRessources.btLvl1,
+					mainActivity.getVertexBufferObjectManager()) ;
+			playSprite2 = new Sprite(596,205,105,102,
+					InitRessources.btLvl2,
+					mainActivity.getVertexBufferObjectManager()) ;
+		}
+		else if(LevelManagerGame.getLevelNow()==2){
+			playSprite = new Sprite(446,205,105,102,
+					InitRessources.btLvl1Over,
+					mainActivity.getVertexBufferObjectManager()) ;
+			playSprite2 = new Sprite(596,205,105,102,
+					InitRessources.btLvl2,
+					mainActivity.getVertexBufferObjectManager()) ;
+		}
+		else if(LevelManagerGame.getLevelNow()==3){
+			playSprite = new Sprite(446,205,105,102,
+					InitRessources.btLvl1Over,
+					mainActivity.getVertexBufferObjectManager()) ;
+			playSprite2 = new Sprite(596,205,105,102,
+					InitRessources.btLvl2Over,
+					mainActivity.getVertexBufferObjectManager()) ;
+		}
+	
 		backSprite= new Sprite(xbte, ybte,141,137,
 				InitRessources.btBack,
 				mainActivity.getVertexBufferObjectManager()) ;
@@ -64,6 +87,10 @@ public class LevelMenuScene extends Scene   implements IOnAreaTouchListener{
 		mInitScene.attachChild(backSprite);
 		
 		mInitScene.registerTouchArea(playSprite);
+		if(LevelManagerGame.getLevelNow()>1){
+			mInitScene.registerTouchArea(playSprite2);
+			mInitScene.attachChild(playSprite2);
+		}
 		mInitScene.registerTouchArea(backSprite);
 	
 		mInitScene.setTouchAreaBindingOnActionDownEnabled(true);
@@ -80,6 +107,13 @@ public class LevelMenuScene extends Scene   implements IOnAreaTouchListener{
 		 return  mainActivity.onSceneTouchEvent(this,pSceneTouchEvent);
 		}
 		else if (pTouchArea.equals(playSprite) && pSceneTouchEvent.getAction() == TouchEvent.ACTION_UP){
+			LevelManagerGame.setLevelSelect(1);
+			 SoundManagerGame.startMusic(InitRessources.clickSound);
+			mainActivity.currentScene = SceneType.LOADGAME;
+		 return  mainActivity.onSceneTouchEvent(this,pSceneTouchEvent);
+		}
+		else if (pTouchArea.equals(playSprite2) && pSceneTouchEvent.getAction() == TouchEvent.ACTION_UP){
+			LevelManagerGame.setLevelSelect(2);
 			 SoundManagerGame.startMusic(InitRessources.clickSound);
 			mainActivity.currentScene = SceneType.LOADGAME;
 		 return  mainActivity.onSceneTouchEvent(this,pSceneTouchEvent);

@@ -33,6 +33,7 @@ public class InitMenuScene extends Scene   implements IOnAreaTouchListener{
 
 	public void initMenu() {
 		this.setChildScene(mInitScene, false, true, true);
+		
 	}
 
 	public void loadInitScene() {
